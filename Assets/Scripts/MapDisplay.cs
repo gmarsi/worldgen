@@ -12,7 +12,7 @@ public class MapDisplay : MonoBehaviour
 	{
 		// We have to use .sharedMaterial instead of .material to view it in the editor
 		textureRender.sharedMaterial.mainTexture = texture;
-		textureRender.transform.localScale = new Vector3(texture.width, 1, texture.height);
+		textureRender.transform.localScale = new Vector3(texture.width/10, 1, texture.height/10);
 	}
 
 	public void DrawMesh(MeshData meshData, Texture2D texture)

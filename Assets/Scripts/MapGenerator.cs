@@ -24,11 +24,22 @@ public class MapGenerator : MonoBehaviour
 	public float MeshHeightMultiplier;
 	public AnimationCurve MeshHeightCurve;
 
+	public GameObject TreePrefab;
+	public float TreeRadius = 1;
+	public int TreePrecision = 30;
+	public float TreeMinHeight;
+	public float TreeMaxHeight;
+	List<GameObject> trees;
+	List<Vector2> treePoints;
+
 	public bool AutoUpdate;
 
 	public TerrainType[] regions;
 
-	public void GenerateMap() 
+	float topLeftX = (MapChunkSize-1)/-2f;
+	float topLeftZ = (MapChunkSize-1)/2f;
+
+	public void GenerateMap(bool generateTrees) 
 	{
 		// Generate noise
 		float[,] noiseMap = Noise.GenerateNoiseMap(MapChunkSize, MapChunkSize, Seed, NoiseScale, Octaves, Persistance, Lacunarity, Offset);
@@ -56,16 +67,35 @@ public class MapGenerator : MonoBehaviour
 		if(DrawMode == MapDrawMode.NoiseMap)
 		{
 			display.DrawTexture(TextureGenerator.TextureFromHeightMap(noiseMap));	
+			GameObject.Find("MapGenerator").transform.Find("Plane").gameObject.SetActive(true);
+			GameObject.Find("MapGenerator").transform.Find("Mesh").gameObject.SetActive(false);
 		}
 		else if (DrawMode == MapDrawMode.ColorMap)
 		{
 			display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, MapChunkSize, MapChunkSize));
+			GameObject.Find("MapGenerator").transform.Find("Plane").gameObject.SetActive(true);
+			GameObject.Find("MapGenerator").transform.Find("Mesh").gameObject.SetActive(false);
 		}
 		else if (DrawMode == MapDrawMode.Mesh)
 		{
 			display.DrawMesh(MeshGenerator.GenerateTerrainMesh(noiseMap, MeshHeightMultiplier, MeshHeightCurve, LevelOfDetail), TextureGenerator.TextureFromColorMap(colorMap, MapChunkSize, MapChunkSize));
+			GameObject.Find("MapGenerator").transform.Find("Plane").gameObject.SetActive(false);
+			GameObject.Find("MapGenerator").transform.Find("Mesh").gameObject.SetActive(true);
 		}
 		
+		// Generate trees
+		foreach(GameObject tree in trees)
+		{
+			DestroyImmediate(tree);
+		}
+		if(generateTrees)
+		{
+			treePoints = PoissonDiscSampling.GeneratePoints(TreeRadius, new Vector2(MapChunkSize, MapChunkSize), TreePrecision, noiseMap, TreeMinHeight, TreeMaxHeight);
+			foreach(Vector2 point in treePoints)
+			{
+				trees.Add(Instantiate(TreePrefab, new Vector3(topLeftX + point.x, MeshHeightCurve.Evaluate(noiseMap[(int)point.x,(int)point.y]) * MeshHeightMultiplier, topLeftZ - point.y), Quaternion.identity));
+			}
+		}
 	}
 
 	void OnValidate() 
