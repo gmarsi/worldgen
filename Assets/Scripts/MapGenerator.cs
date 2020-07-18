@@ -83,6 +83,11 @@ public class MapGenerator : MonoBehaviour
 			GameObject.Find("MapGenerator").transform.Find("Mesh").gameObject.SetActive(true);
 		}
 		
+		if(trees == null)
+		{
+			trees = new List<GameObject>();
+		}
+
 		// Generate trees
 		foreach(GameObject tree in trees)
 		{
